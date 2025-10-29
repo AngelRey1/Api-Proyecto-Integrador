@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "outDir": "./dist",
+    "paths": {
+      "@/*": ["*"],
+      "@/domain/*": ["domain/*"],
+      "@/application/*": ["application/*"],
+      "@/infrastructure/*": ["infrastructure/*"],
+      "@/presentation/*": ["presentation/*"],
+      "@/shared/*": ["shared/*"]
+    }
+  }
+}
