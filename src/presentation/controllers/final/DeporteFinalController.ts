@@ -1,6 +1,14 @@
 import { Request, Response } from 'express';
+import { DeporteUseCases } from '@/application/use-cases/DeporteUseCases';
+import { SupabaseDeporteRepository } from '@/infrastructure/repositories/SupabaseDeporteRepository';
 
 export class DeporteFinalController {
+  private deporteUseCases: DeporteUseCases;
+
+  constructor() {
+    const repository = new SupabaseDeporteRepository();
+    this.deporteUseCases = new DeporteUseCases(repository);
+  }
 
   /**
    * @swagger
@@ -28,14 +36,31 @@ export class DeporteFinalController {
    *                     $ref: '#/components/schemas/Deporte'
    */
   async getAll(req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      success: true,
-      data: [
-        { id_deporte: 1, nombre: "Yoga", descripcion: "Disciplina física y mental", nivel: "PRINCIPIANTE" },
-        { id_deporte: 2, nombre: "CrossFit", descripcion: "Entrenamiento funcional de alta intensidad", nivel: "AVANZADO" },
-        { id_deporte: 3, nombre: "Pilates", descripcion: "Fortalecimiento del core y flexibilidad", nivel: "INTERMEDIO" }
-      ]
-    });
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+      const result = await this.deporteUseCases.getAllDeportes({ page, limit });
+      
+      res.status(200).json({
+        success: true,
+        data: result.deportes,
+        pagination: { 
+          page, 
+          limit,
+          total: result.total,
+          pages: Math.ceil(result.total / limit)
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error obteniendo deportes:', error);
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 
   /**
@@ -68,10 +93,44 @@ export class DeporteFinalController {
    *                   $ref: '#/components/schemas/Deporte'
    */
   async getById(req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      success: true,
-      data: { id_deporte: 1, nombre: "Yoga", descripcion: "Disciplina física y mental", nivel: "PRINCIPIANTE" }
-    });
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (!id || isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          error: "ID inválido",
+          code: "ID_INVALIDO"
+        });
+        return;
+      }
+      
+      const deporte = await this.deporteUseCases.getDeporteById(id);
+      
+      res.status(200).json({
+        success: true,
+        data: deporte
+      });
+      
+    } catch (error) {
+      console.error('Error obteniendo deporte:', error);
+      const message = (error as Error).message;
+      
+      if (message.includes('no encontrado') || message.includes('not found')) {
+        res.status(404).json({
+          success: false,
+          error: "Deporte no encontrado",
+          code: "DEPORTE_NO_ENCONTRADO"
+        });
+        return;
+      }
+      
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 
   /**
@@ -106,10 +165,27 @@ export class DeporteFinalController {
    *         description: Deporte creado exitosamente
    */
   async create(req: Request, res: Response): Promise<void> {
-    res.status(201).json({
-      success: true,
-      data: { id_deporte: 4, nombre: "Natación", descripcion: "Deporte acuático completo", nivel: "INTERMEDIO" }
-    });
+    try {
+      const data = req.body;
+      
+      const nuevoDeporte = await this.deporteUseCases.createDeporte(data);
+      
+      res.status(201).json({
+        success: true,
+        data: nuevoDeporte,
+        message: "Deporte creado exitosamente"
+      });
+      
+    } catch (error) {
+      console.error('Error creando deporte:', error);
+      const message = (error as Error).message;
+      
+      res.status(400).json({
+        success: false,
+        error: message || "Error creando deporte",
+        code: "ERROR_CREACION"
+      });
+    }
   }
 
   /**
@@ -149,10 +225,46 @@ export class DeporteFinalController {
    *         description: Deporte actualizado exitosamente
    */
   async update(req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      success: true,
-      data: { id_deporte: 1, nombre: "Hatha Yoga", descripcion: "Yoga tradicional con posturas estáticas", nivel: "PRINCIPIANTE" }
-    });
+    try {
+      const id = parseInt(req.params.id);
+      const data = req.body;
+      
+      if (!id || isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          error: "ID inválido",
+          code: "ID_INVALIDO"
+        });
+        return;
+      }
+      
+      const deporteActualizado = await this.deporteUseCases.updateDeporte(id, data);
+      
+      res.status(200).json({
+        success: true,
+        data: deporteActualizado,
+        message: "Deporte actualizado exitosamente"
+      });
+      
+    } catch (error) {
+      console.error('Error actualizando deporte:', error);
+      const message = (error as Error).message;
+      
+      if (message.includes('no encontrado') || message.includes('not found')) {
+        res.status(404).json({
+          success: false,
+          error: "Deporte no encontrado",
+          code: "DEPORTE_NO_ENCONTRADO"
+        });
+        return;
+      }
+      
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 
   /**
@@ -175,9 +287,43 @@ export class DeporteFinalController {
    *         description: Deporte eliminado exitosamente
    */
   async delete(req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      success: true,
-      message: "Deporte eliminado exitosamente"
-    });
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (!id || isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          error: "ID inválido",
+          code: "ID_INVALIDO"
+        });
+        return;
+      }
+      
+      await this.deporteUseCases.deleteDeporte(id);
+      
+      res.status(200).json({
+        success: true,
+        message: "Deporte eliminado exitosamente"
+      });
+      
+    } catch (error) {
+      console.error('Error eliminando deporte:', error);
+      const message = (error as Error).message;
+      
+      if (message.includes('no encontrado') || message.includes('not found')) {
+        res.status(404).json({
+          success: false,
+          error: "Deporte no encontrado",
+          code: "DEPORTE_NO_ENCONTRADO"
+        });
+        return;
+      }
+      
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 }

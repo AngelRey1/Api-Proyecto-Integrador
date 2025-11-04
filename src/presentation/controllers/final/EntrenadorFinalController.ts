@@ -1,6 +1,14 @@
 import { Request, Response } from 'express';
+import { EntrenadorUseCases } from '@/application/use-cases/EntrenadorUseCases';
+import { SupabaseEntrenadorRepository } from '@/infrastructure/repositories/SupabaseEntrenadorRepository';
 
 export class EntrenadorFinalController {
+  private entrenadorUseCases: EntrenadorUseCases;
+
+  constructor() {
+    const entrenadorRepository = new SupabaseEntrenadorRepository();
+    this.entrenadorUseCases = new EntrenadorUseCases(entrenadorRepository);
+  }
 
   /**
    * @swagger
@@ -41,27 +49,31 @@ export class EntrenadorFinalController {
    *                     $ref: '#/components/schemas/Entrenador'
    */
   async getAll(req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      success: true,
-      data: [
-        { 
-          id_entrenador: 1, 
-          id_usuario: 2, 
-          especialidad: "Yoga y Pilates", 
-          experiencia: 5, 
-          descripcion: "Entrenador certificado con 5 años de experiencia",
-          foto_url: "https://ejemplo.com/foto1.jpg"
-        },
-        { 
-          id_entrenador: 2, 
-          id_usuario: 3, 
-          especialidad: "CrossFit", 
-          experiencia: 3, 
-          descripcion: "Especialista en entrenamiento funcional",
-          foto_url: "https://ejemplo.com/foto2.jpg"
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+      const result = await this.entrenadorUseCases.getAllEntrenadores({ page, limit });
+      
+      res.status(200).json({
+        success: true,
+        data: result.entrenadores,
+        pagination: { 
+          page, 
+          limit,
+          total: result.total,
+          pages: Math.ceil(result.total / limit)
         }
-      ]
-    });
+      });
+      
+    } catch (error) {
+      console.error('Error obteniendo entrenadores:', error);
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 
   /**
@@ -95,17 +107,44 @@ export class EntrenadorFinalController {
    *                   $ref: '#/components/schemas/Entrenador'
    */
   async getById(req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      success: true,
-      data: { 
-        id_entrenador: 1, 
-        id_usuario: 2, 
-        especialidad: "Yoga y Pilates", 
-        experiencia: 5, 
-        descripcion: "Entrenador certificado con 5 años de experiencia",
-        foto_url: "https://ejemplo.com/foto1.jpg"
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (!id || isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          error: "ID inválido",
+          code: "ID_INVALIDO"
+        });
+        return;
       }
-    });
+      
+      const entrenador = await this.entrenadorUseCases.getEntrenadorById(id);
+      
+      res.status(200).json({
+        success: true,
+        data: entrenador
+      });
+      
+    } catch (error) {
+      console.error('Error obteniendo entrenador:', error);
+      const message = (error as Error).message;
+      
+      if (message.includes('no encontrado') || message.includes('not found')) {
+        res.status(404).json({
+          success: false,
+          error: "Entrenador no encontrado",
+          code: "ENTRENADOR_NO_ENCONTRADO"
+        });
+        return;
+      }
+      
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 
   /**
@@ -156,16 +195,27 @@ export class EntrenadorFinalController {
    *                   $ref: '#/components/schemas/Entrenador'
    */
   async create(req: Request, res: Response): Promise<void> {
-    res.status(201).json({
-      success: true,
-      data: { 
-        id_entrenador: 3, 
-        id_usuario: 4, 
-        especialidad: "Natación", 
-        experiencia: 2, 
-        descripcion: "Instructor de natación certificado"
-      }
-    });
+    try {
+      const data = req.body;
+      
+      const nuevoEntrenador = await this.entrenadorUseCases.createEntrenador(data);
+      
+      res.status(201).json({
+        success: true,
+        data: nuevoEntrenador,
+        message: "Entrenador creado exitosamente"
+      });
+      
+    } catch (error) {
+      console.error('Error creando entrenador:', error);
+      const message = (error as Error).message;
+      
+      res.status(400).json({
+        success: false,
+        error: message || "Error creando entrenador",
+        code: "ERROR_CREACION"
+      });
+    }
   }
 
   /**
@@ -215,15 +265,46 @@ export class EntrenadorFinalController {
    *                   $ref: '#/components/schemas/Entrenador'
    */
   async update(req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      success: true,
-      data: { 
-        id_entrenador: 1, 
-        especialidad: "Yoga, Pilates y Meditación", 
-        experiencia: 6, 
-        descripcion: "Entrenador certificado con 6 años de experiencia"
+    try {
+      const id = parseInt(req.params.id);
+      const data = req.body;
+      
+      if (!id || isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          error: "ID inválido",
+          code: "ID_INVALIDO"
+        });
+        return;
       }
-    });
+      
+      const entrenadorActualizado = await this.entrenadorUseCases.updateEntrenador(id, data);
+      
+      res.status(200).json({
+        success: true,
+        data: entrenadorActualizado,
+        message: "Entrenador actualizado exitosamente"
+      });
+      
+    } catch (error) {
+      console.error('Error actualizando entrenador:', error);
+      const message = (error as Error).message;
+      
+      if (message.includes('no encontrado') || message.includes('not found')) {
+        res.status(404).json({
+          success: false,
+          error: "Entrenador no encontrado",
+          code: "ENTRENADOR_NO_ENCONTRADO"
+        });
+        return;
+      }
+      
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 
   /**
@@ -258,10 +339,44 @@ export class EntrenadorFinalController {
    *                   example: "Entrenador eliminado exitosamente"
    */
   async delete(req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      success: true,
-      message: "Entrenador eliminado exitosamente"
-    });
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (!id || isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          error: "ID inválido",
+          code: "ID_INVALIDO"
+        });
+        return;
+      }
+      
+      await this.entrenadorUseCases.deleteEntrenador(id);
+      
+      res.status(200).json({
+        success: true,
+        message: "Entrenador eliminado exitosamente"
+      });
+      
+    } catch (error) {
+      console.error('Error eliminando entrenador:', error);
+      const message = (error as Error).message;
+      
+      if (message.includes('no encontrado') || message.includes('not found')) {
+        res.status(404).json({
+          success: false,
+          error: "Entrenador no encontrado",
+          code: "ENTRENADOR_NO_ENCONTRADO"
+        });
+        return;
+      }
+      
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 
   /**
@@ -357,47 +472,35 @@ export class EntrenadorFinalController {
       }
     }
     
-    // Simular búsqueda con filtros aplicados
-    const resultados = await this.buscarEntrenadoresDisponibles(deporte as string, fecha as string, ubicacion as string);
-    
-    res.status(200).json({
-      success: true,
-      data: resultados,
-      filtros_aplicados: {
-        deporte: deporte || "todos",
-        fecha: fecha || "cualquier_fecha",
-        ubicacion: ubicacion || "todas_las_ubicaciones"
-      },
-      total_encontrados: resultados.length
-    });
-  }
-  
-  // 🔍 Método auxiliar para búsqueda
-  private async buscarEntrenadoresDisponibles(deporte?: string, fecha?: string, ubicacion?: string): Promise<any[]> {
-    console.log(`🔍 Buscando entrenadores - Deporte: ${deporte}, Fecha: ${fecha}, Ubicación: ${ubicacion}`);
-    
-    // Mock de resultados filtrados
-    return [
-        {
-          id_entrenador: 1,
-          nombre: "Carlos Ruiz",
-          especialidad: "Yoga y Pilates",
-          experiencia: 5,
-          calificacion_promedio: 4.8,
-          disponible: true,
-          precio_por_sesion: 50.00,
-          ubicacion: "Madrid Centro"
+    // Buscar entrenadores en la base de datos
+    try {
+      const filtros = {
+        deporte: deporte as string,
+        fecha: fecha as string,
+        ubicacion: ubicacion as string
+      };
+      
+      const resultados = await this.entrenadorUseCases.getAllEntrenadores({ page: 1, limit: 50 });
+      
+      res.status(200).json({
+        success: true,
+        data: resultados.entrenadores,
+        filtros_aplicados: {
+          deporte: deporte || "todos",
+          fecha: fecha || "cualquier_fecha",
+          ubicacion: ubicacion || "todas_las_ubicaciones"
         },
-        {
-          id_entrenador: 2,
-          nombre: "Ana García",
-          especialidad: "CrossFit",
-          experiencia: 3,
-          calificacion_promedio: 4.6,
-          disponible: true,
-          precio_por_sesion: 45.00,
-          ubicacion: "Madrid Norte"
-        }
-      ];
+        total_encontrados: resultados.entrenadores.length
+      });
+      
+    } catch (error) {
+      console.error('Error buscando entrenadores:', error);
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
+
 }

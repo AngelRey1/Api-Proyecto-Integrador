@@ -1,6 +1,14 @@
 import { Request, Response } from 'express';
+import { ReservaUseCases } from '@/application/use-cases/ReservaUseCases';
+import { SupabaseReservaRepository } from '@/infrastructure/repositories/SupabaseReservaRepository';
 
 export class ReservaFinalController {
+  private reservaUseCases: ReservaUseCases;
+
+  constructor() {
+    const repository = new SupabaseReservaRepository();
+    this.reservaUseCases = new ReservaUseCases(repository);
+  }
 
   /**
    * @swagger
@@ -40,14 +48,40 @@ export class ReservaFinalController {
    *                     $ref: '#/components/schemas/Reserva'
    */
   async getAll(req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      success: true,
-      data: [
-        { id_reserva: 1, id_cliente: 1, id_sesion: 1, estado: "CONFIRMADA", fecha_reserva: "2025-11-04T10:00:00Z" },
-        { id_reserva: 2, id_cliente: 1, id_sesion: 2, estado: "PENDIENTE", fecha_reserva: "2025-11-05T14:00:00Z" }
-      ]
-    });
-    return;
+    try {
+      const usuario = (req as any).user;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const estado = req.query.estado as string;
+      
+      // Filtrar por usuario autenticado
+      const filters = { 
+        cliente_id: usuario.rol === 'CLIENTE' ? usuario.id : undefined,
+        entrenador_id: usuario.rol === 'ENTRENADOR' ? usuario.id : undefined,
+        estado
+      };
+      
+      const result = await this.reservaUseCases.getAllReservas({ page, limit, ...filters });
+      
+      res.status(200).json({
+        success: true,
+        data: result.reservas,
+        pagination: { 
+          page, 
+          limit,
+          total: result.total,
+          pages: Math.ceil(result.total / limit)
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error obteniendo reservas:', error);
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 
   /**
@@ -81,11 +115,55 @@ export class ReservaFinalController {
    *                   $ref: '#/components/schemas/Reserva'
    */
   async getById(req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      success: true,
-      data: { id_reserva: 1, id_cliente: 1, id_sesion: 1, estado: "CONFIRMADA", fecha_reserva: "2025-11-04T10:00:00Z" }
-    });
-    return;
+    try {
+      const id = parseInt(req.params.id);
+      const usuario = (req as any).user;
+      
+      if (!id || isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          error: "ID de reserva inválido",
+          code: "ID_INVALIDO"
+        });
+        return;
+      }
+      
+      const reserva = await this.reservaUseCases.getReservaById(id);
+      
+      // Verificar que la reserva pertenece al usuario
+      if (usuario.rol === 'CLIENTE' && reserva.id_cliente !== usuario.id) {
+        res.status(403).json({
+          success: false,
+          error: "No tienes permisos para ver esta reserva",
+          code: "ACCESO_DENEGADO"
+        });
+        return;
+      }
+      
+      res.status(200).json({
+        success: true,
+        data: reserva
+      });
+      
+    } catch (error) {
+      console.error('Error obteniendo reserva:', error);
+      const message = (error as Error).message;
+      
+      if (message.includes('no encontrado') || message.includes('not found')) {
+        res.status(404).json({
+          success: false,
+          error: "Reserva no encontrada",
+          code: "RESERVA_NO_ENCONTRADA"
+        });
+        return;
+      }
+      
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 
   /**
@@ -213,55 +291,66 @@ export class ReservaFinalController {
       return;
     }
     
-    // ✅ Crear la reserva
-    const nuevaReserva = {
-      id_reserva: Math.floor(Math.random() * 1000) + 100,
-      id_cliente: usuario.id,
-      id_sesion,
-      estado: "PENDIENTE",
-      fecha_reserva: new Date().toISOString(),
-      notas: notas || null,
-      fecha_creacion: new Date().toISOString()
-    };
-    
-    res.status(201).json({
-      success: true,
-      data: nuevaReserva,
-      message: "Reserva creada exitosamente. Recibirás una confirmación pronto."
-    });
-    return;
+    // ✅ Crear la reserva en la base de datos
+    try {
+      const nuevaReserva = await this.reservaUseCases.createReserva({
+        id_cliente: usuario.id,
+        id_sesion,
+        estado: "PENDIENTE",
+        // notas: notas || null
+      });
+      
+      res.status(201).json({
+        success: true,
+        data: nuevaReserva,
+        message: "Reserva creada exitosamente. Recibirás una confirmación pronto."
+      });
+      
+    } catch (error) {
+      console.error('Error creando reserva:', error);
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor al crear la reserva",
+        code: "ERROR_CREACION"
+      });
+    }
   }
   
-  // 🔍 Métodos auxiliares para validaciones
+  // 🔍 Métodos auxiliares para validaciones (simplificados)
   private async verificarSesionExiste(id_sesion: number): Promise<any> {
-    // En producción: SELECT * FROM sesiones WHERE id_sesion = ? AND activa = true
-    console.log(`🔍 Verificando existencia de sesión ${id_sesion}`);
-    return { id_sesion, entrenador_id: 2, fecha: "2025-11-05T10:00:00Z" }; // Mock
+    try {
+      // Simplificar validación - en producción usar servicio de sesiones
+      return { id_sesion, disponible: true }; // Por ahora permitir todas las sesiones
+    } catch (error) {
+      return null;
+    }
   }
   
   private async verificarDisponibilidad(id_sesion: number): Promise<boolean> {
-    // En producción: 
-    // SELECT COUNT(*) FROM reservas 
-    // WHERE id_sesion = ? AND estado IN ('PENDIENTE', 'CONFIRMADA')
-    console.log(`🔍 Verificando disponibilidad de sesión ${id_sesion}`);
-    return true; // Mock: simular que está disponible
+    try {
+      const reservasActivas = await this.reservaUseCases.getReservasBySesionId(id_sesion);
+      return reservasActivas.length === 0;
+    } catch (error) {
+      return true; // Si hay error, permitir la reserva
+    }
   }
   
   private async verificarConflictoHorario(cliente_id: number, id_sesion: number): Promise<boolean> {
-    // En producción:
-    // SELECT COUNT(*) FROM reservas r 
-    // JOIN sesiones s1 ON r.id_sesion = s1.id_sesion 
-    // JOIN sesiones s2 ON s2.id_sesion = ?
-    // WHERE r.id_cliente = ? AND r.estado IN ('PENDIENTE', 'CONFIRMADA')
-    // AND s1.fecha_inicio < s2.fecha_fin AND s1.fecha_fin > s2.fecha_inicio
-    console.log(`🔍 Verificando conflictos de horario para cliente ${cliente_id} y sesión ${id_sesion}`);
-    return false; // Mock: simular que no hay conflictos
+    try {
+      // Simplificar validación - en producción implementar lógica de horarios
+      return false; // Por ahora no hay conflictos
+    } catch (error) {
+      return false;
+    }
   }
   
   private async contarReservasPendientes(cliente_id: number): Promise<number> {
-    // En producción: SELECT COUNT(*) FROM reservas WHERE id_cliente = ? AND estado = 'PENDIENTE'
-    console.log(`🔍 Contando reservas pendientes para cliente ${cliente_id}`);
-    return 1; // Mock: simular que tiene 1 reserva pendiente
+    try {
+      const reservas = await this.reservaUseCases.getReservasByClienteId(cliente_id);
+      return reservas.filter((r: any) => r.estado === 'PENDIENTE').length;
+    } catch (error) {
+      return 0;
+    }
   }
 
   /**
@@ -306,11 +395,36 @@ export class ReservaFinalController {
    *                   $ref: '#/components/schemas/Reserva'
    */
   async update(req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      success: true,
-      data: { id_reserva: 1, id_cliente: 1, id_sesion: 1, estado: "CONFIRMADA", fecha_reserva: "2025-11-04T10:00:00Z" }
-    });
-    return;
+    try {
+      const id = parseInt(req.params.id);
+      const updateData = req.body;
+      const usuario = (req as any).user;
+      
+      if (!id || isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          error: "ID de reserva inválido",
+          code: "ID_INVALIDO"
+        });
+        return;
+      }
+      
+      const reservaActualizada = await this.reservaUseCases.updateReserva(id, updateData);
+      
+      res.status(200).json({
+        success: true,
+        data: reservaActualizada,
+        message: "Reserva actualizada exitosamente"
+      });
+      
+    } catch (error) {
+      console.error('Error actualizando reserva:', error);
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 
   /**
@@ -345,11 +459,33 @@ export class ReservaFinalController {
    *                   example: "Reserva cancelada exitosamente"
    */
   async delete(req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      success: true,
-      message: "Reserva cancelada exitosamente"
-    });
-    return;
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (!id || isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          error: "ID de reserva inválido",
+          code: "ID_INVALIDO"
+        });
+        return;
+      }
+      
+      await this.reservaUseCases.deleteReserva(id);
+      
+      res.status(200).json({
+        success: true,
+        message: "Reserva cancelada exitosamente"
+      });
+      
+    } catch (error) {
+      console.error('Error cancelando reserva:', error);
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 
   /**
@@ -390,14 +526,32 @@ export class ReservaFinalController {
    *                       example: 2
    */
   async misReservas(req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      success: true,
-      data: [
-        { id_reserva: 1, estado: "CONFIRMADA", fecha_reserva: "2025-11-04T10:00:00Z" },
-        { id_reserva: 2, estado: "PENDIENTE", fecha_reserva: "2025-11-05T14:00:00Z" }
-      ],
-      resumen: { total: 2, confirmadas: 1, pendientes: 1 }
-    });
-    return;
+    try {
+      const usuario = (req as any).user;
+      
+      const reservas = await this.reservaUseCases.getReservasByClienteId(usuario.id);
+      
+      // Calcular resumen
+      const resumen = {
+        total: reservas.length,
+        confirmadas: reservas.filter((r: any) => r.estado === 'CONFIRMADA').length,
+        pendientes: reservas.filter((r: any) => r.estado === 'PENDIENTE').length,
+        canceladas: reservas.filter((r: any) => r.estado === 'CANCELADA').length
+      };
+      
+      res.status(200).json({
+        success: true,
+        data: reservas,
+        resumen
+      });
+      
+    } catch (error) {
+      console.error('Error obteniendo mis reservas:', error);
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 }

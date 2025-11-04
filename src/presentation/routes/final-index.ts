@@ -3,9 +3,9 @@ import { AuthFinalController } from '@/presentation/controllers/final/AuthFinalC
 import { UsuarioFinalController } from '@/presentation/controllers/final/UsuarioFinalController';
 import { EntrenadorFinalController } from '@/presentation/controllers/final/EntrenadorFinalController';
 import { ClienteFinalController } from '@/presentation/controllers/final/ClienteFinalController';
-import { ReservaFinalController } from '@/presentation/controllers/final/ReservaFinalController';
-import { PagoFinalController } from '@/presentation/controllers/final/PagoFinalController';
-import { ReseñaFinalController } from '../controllers/final/ReseñaFinalController';
+// import { ReservaFinalController } from '@/presentation/controllers/final/ReservaFinalController';
+// import { PagoFinalController } from '@/presentation/controllers/final/PagoFinalController';
+// import { ReseñaFinalController } from '../controllers/final/ReseñaFinalController';
 import { DeporteFinalController } from '@/presentation/controllers/final/DeporteFinalController';
 import { authenticateToken } from '@/shared/middleware/auth';
 import { validacionesReserva, validacionesReseña } from '@/shared/middleware/businessValidations';
@@ -17,9 +17,9 @@ const authController = new AuthFinalController();
 const usuarioController = new UsuarioFinalController();
 const entrenadorController = new EntrenadorFinalController();
 const clienteController = new ClienteFinalController();
-const reservaController = new ReservaFinalController();
-const pagoController = new PagoFinalController();
-const reseñaController = new ReseñaFinalController();
+// const reservaController = new ReservaFinalController();
+// const pagoController = new PagoFinalController();
+// const reseñaController = new ReseñaFinalController();
 const deporteController = new DeporteFinalController();
 
 // ═══════════════════════════════════════════════════════════════════
@@ -58,30 +58,30 @@ router.put('/clientes/:id', authenticateToken, (req, res) => clienteController.u
 router.delete('/clientes/:id', authenticateToken, (req, res) => clienteController.delete(req, res));
 
 // ═══════════════════════════════════════════════════════════════════
-// 📅 RESERVAS (FUNCIONALIDAD PRINCIPAL)
+// 📅 RESERVAS (FUNCIONALIDAD PRINCIPAL) - TEMPORALMENTE COMENTADO
 // ═══════════════════════════════════════════════════════════════════
-router.get('/reservas', authenticateToken, (req, res) => reservaController.getAll(req, res));
-router.get('/reservas/mis-reservas', authenticateToken, (req, res) => reservaController.misReservas(req, res));
-router.get('/reservas/:id', authenticateToken, (req, res) => reservaController.getById(req, res));
-router.post('/reservas', authenticateToken, ...validacionesReserva, (req, res) => reservaController.create(req, res));
-router.put('/reservas/:id', authenticateToken, (req, res) => reservaController.update(req, res));
-router.delete('/reservas/:id', authenticateToken, (req, res) => reservaController.delete(req, res));
+// router.get('/reservas', authenticateToken, (req, res) => reservaController.getAll(req, res));
+// router.get('/reservas/mis-reservas', authenticateToken, (req, res) => reservaController.misReservas(req, res));
+// router.get('/reservas/:id', authenticateToken, (req, res) => reservaController.getById(req, res));
+// router.post('/reservas', authenticateToken, ...validacionesReserva, (req, res) => reservaController.create(req, res));
+// router.put('/reservas/:id', authenticateToken, (req, res) => reservaController.update(req, res));
+// router.delete('/reservas/:id', authenticateToken, (req, res) => reservaController.delete(req, res));
 
 // ═══════════════════════════════════════════════════════════════════
-// 💰 PAGOS
+// 💰 PAGOS - TEMPORALMENTE COMENTADO
 // ═══════════════════════════════════════════════════════════════════
-router.get('/pagos', authenticateToken, (req, res) => pagoController.getAll(req, res));
-router.get('/pagos/:id', authenticateToken, (req, res) => pagoController.getById(req, res));
-router.post('/pagos', authenticateToken, (req, res) => pagoController.create(req, res));
-router.put('/pagos/:id', authenticateToken, (req, res) => pagoController.update(req, res));
+// router.get('/pagos', authenticateToken, (req, res) => pagoController.getAll(req, res));
+// router.get('/pagos/:id', authenticateToken, (req, res) => pagoController.getById(req, res));
+// router.post('/pagos', authenticateToken, (req, res) => pagoController.create(req, res));
+// router.put('/pagos/:id', authenticateToken, (req, res) => pagoController.update(req, res));
 
 // ═══════════════════════════════════════════════════════════════════
-// ⭐ RESEÑAS
+// ⭐ RESEÑAS - TEMPORALMENTE COMENTADO
 // ═══════════════════════════════════════════════════════════════════
-router.get('/reseñas', authenticateToken, (req, res) => reseñaController.getAll(req, res));
-router.get('/reseñas/:id', authenticateToken, (req, res) => reseñaController.getById(req, res));
-router.post('/reseñas', authenticateToken, ...validacionesReseña, (req, res) => reseñaController.create(req, res));
-router.put('/reseñas/:id', authenticateToken, (req, res) => reseñaController.update(req, res));
+// router.get('/reseñas', authenticateToken, (req, res) => reseñaController.getAll(req, res));
+// router.get('/reseñas/:id', authenticateToken, (req, res) => reseñaController.getById(req, res));
+// router.post('/reseñas', authenticateToken, ...validacionesReseña, (req, res) => reseñaController.create(req, res));
+// router.put('/reseñas/:id', authenticateToken, (req, res) => reseñaController.update(req, res));
 
 // ═══════════════════════════════════════════════════════════════════
 // 🏆 DEPORTES

@@ -1,6 +1,15 @@
 import { Request, Response } from 'express';
+import { UserUseCases } from '@/application/use-cases/UserUseCases';
+import { SupabaseUserRepository } from '@/infrastructure/repositories/SupabaseUserRepository';
+import { PasswordUtils } from '@/shared/utils/password';
 
 export class UsuarioFinalController {
+  private userUseCases: UserUseCases;
+
+  constructor() {
+    const userRepository = new SupabaseUserRepository();
+    this.userUseCases = new UserUseCases(userRepository);
+  }
 
   /**
    * @swagger
@@ -50,14 +59,37 @@ export class UsuarioFinalController {
    *                       example: 50
    */
   async getAll(req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      success: true,
-      data: [
-        { id_usuario: 1, nombre: "María", apellido: "González", email: "maria@email.com", rol: "CLIENTE" },
-        { id_usuario: 2, nombre: "Carlos", apellido: "Ruiz", email: "carlos@email.com", rol: "ENTRENADOR" }
-      ],
-      pagination: { page: 1, total: 2 }
-    });
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+      const result = await this.userUseCases.getAllUsers({ page, limit });
+      
+      // Remover contraseñas de la respuesta
+      const usuariosSinPassword = result.users.map(user => {
+        const { contrasena, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      
+      res.status(200).json({
+        success: true,
+        data: usuariosSinPassword,
+        pagination: { 
+          page, 
+          limit,
+          total: result.total,
+          pages: Math.ceil(result.total / limit)
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error obteniendo usuarios:', error);
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 
   /**
@@ -93,10 +125,47 @@ export class UsuarioFinalController {
    *         $ref: '#/components/responses/Error'
    */
   async getById(req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      success: true,
-      data: { id_usuario: 1, nombre: "María", apellido: "González", email: "maria@email.com", rol: "CLIENTE" }
-    });
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (!id || isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          error: "ID de usuario inválido",
+          code: "ID_INVALIDO"
+        });
+        return;
+      }
+      
+      const usuario = await this.userUseCases.getUserById(id);
+      
+      // Remover contraseña de la respuesta
+      const { contrasena, ...usuarioSinPassword } = usuario;
+      
+      res.status(200).json({
+        success: true,
+        data: usuarioSinPassword
+      });
+      
+    } catch (error) {
+      console.error('Error obteniendo usuario:', error);
+      const message = (error as Error).message;
+      
+      if (message.includes('Usuario no encontrado')) {
+        res.status(404).json({
+          success: false,
+          error: "Usuario no encontrado",
+          code: "USUARIO_NO_ENCONTRADO"
+        });
+        return;
+      }
+      
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 
   /**
@@ -148,10 +217,70 @@ export class UsuarioFinalController {
    *                   $ref: '#/components/schemas/Usuario'
    */
   async create(req: Request, res: Response): Promise<void> {
-    res.status(201).json({
-      success: true,
-      data: { id_usuario: 3, nombre: "Ana", apellido: "Martín", email: "ana@email.com", rol: "CLIENTE" }
-    });
+    try {
+      const { nombre, apellido, email, contrasena, rol } = req.body;
+      
+      // Validaciones
+      if (!nombre || !apellido || !email || !contrasena || !rol) {
+        res.status(400).json({
+          success: false,
+          error: "Todos los campos son requeridos",
+          code: "CAMPOS_REQUERIDOS"
+        });
+        return;
+      }
+      
+      // Validar contraseña
+      const passwordValidation = PasswordUtils.validatePassword(contrasena);
+      if (!passwordValidation.isValid) {
+        res.status(400).json({
+          success: false,
+          error: "Contraseña no cumple con los requisitos",
+          code: "CONTRASENA_INVALIDA",
+          detalles: passwordValidation.errors.join(', ')
+        });
+        return;
+      }
+      
+      // Hashear contraseña
+      const hashedPassword = await PasswordUtils.hashPassword(contrasena);
+      
+      const nuevoUsuario = await this.userUseCases.createUser({
+        nombre,
+        apellido,
+        email,
+        contrasena: hashedPassword,
+        rol
+      });
+      
+      // Remover contraseña de la respuesta
+      const { contrasena: _, ...usuarioSinPassword } = nuevoUsuario;
+      
+      res.status(201).json({
+        success: true,
+        data: usuarioSinPassword,
+        message: "Usuario creado exitosamente"
+      });
+      
+    } catch (error) {
+      console.error('Error creando usuario:', error);
+      const message = (error as Error).message;
+      
+      if (message.includes('Ya existe un usuario con este email')) {
+        res.status(400).json({
+          success: false,
+          error: "Ya existe un usuario con este email",
+          code: "EMAIL_DUPLICADO"
+        });
+        return;
+      }
+      
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 
   /**
@@ -202,10 +331,49 @@ export class UsuarioFinalController {
    *                   $ref: '#/components/schemas/Usuario'
    */
   async update(req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      success: true,
-      data: { id_usuario: 1, nombre: "María Carmen", apellido: "González López", email: "maria.carmen@email.com", rol: "CLIENTE" }
-    });
+    try {
+      const id = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      if (!id || isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          error: "ID de usuario inválido",
+          code: "ID_INVALIDO"
+        });
+        return;
+      }
+      
+      const usuarioActualizado = await this.userUseCases.updateUser(id, updateData);
+      
+      // Remover contraseña de la respuesta
+      const { contrasena, ...usuarioSinPassword } = usuarioActualizado;
+      
+      res.status(200).json({
+        success: true,
+        data: usuarioSinPassword,
+        message: "Usuario actualizado exitosamente"
+      });
+      
+    } catch (error) {
+      console.error('Error actualizando usuario:', error);
+      const message = (error as Error).message;
+      
+      if (message.includes('Usuario no encontrado')) {
+        res.status(404).json({
+          success: false,
+          error: "Usuario no encontrado",
+          code: "USUARIO_NO_ENCONTRADO"
+        });
+        return;
+      }
+      
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 
   /**
@@ -240,9 +408,43 @@ export class UsuarioFinalController {
    *                   example: "Usuario eliminado exitosamente"
    */
   async delete(req: Request, res: Response): Promise<void> {
-    res.status(200).json({
-      success: true,
-      message: "Usuario eliminado exitosamente"
-    });
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (!id || isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          error: "ID de usuario inválido",
+          code: "ID_INVALIDO"
+        });
+        return;
+      }
+      
+      await this.userUseCases.deleteUser(id);
+      
+      res.status(200).json({
+        success: true,
+        message: "Usuario eliminado exitosamente"
+      });
+      
+    } catch (error) {
+      console.error('Error eliminando usuario:', error);
+      const message = (error as Error).message;
+      
+      if (message.includes('Usuario no encontrado')) {
+        res.status(404).json({
+          success: false,
+          error: "Usuario no encontrado",
+          code: "USUARIO_NO_ENCONTRADO"
+        });
+        return;
+      }
+      
+      res.status(500).json({
+        success: false,
+        error: "Error interno del servidor",
+        code: "ERROR_INTERNO"
+      });
+    }
   }
 }
