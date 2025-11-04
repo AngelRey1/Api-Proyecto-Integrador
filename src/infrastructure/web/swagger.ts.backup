@@ -5,39 +5,23 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: '🏋️ App Deporte - Sistema de Agendamiento de Entrenadores',
+      title: 'App Deporte - Sistema de Agendamiento de Entrenadores',
       version: '1.0.0',
       description: `
-# 🎯 API REST para Agendamiento de Entrenamiento Personal
+API REST para gestión de citas entre clientes y entrenadores personales.
 
-## 📋 Descripción General
-Sistema completo de gestión de citas entre **clientes** y **entrenadores personales**. 
-Esta API permite buscar entrenadores, gestionar disponibilidad, agendar sesiones y procesar pagos de manera integrada.
+**Flujo de Uso:**
+1. Registro/Login - Obtener token JWT
+2. Crear Perfil - Cliente o Entrenador
+3. Configurar Disponibilidad - Solo entrenadores
+4. Buscar y Agendar Sesiones
+5. Procesar Pago
+6. Calificar Experiencia
 
-## 🚀 Flujo Principal de Usuario
-
-### Para Clientes:
-1. **Registro/Login** → Crear cuenta y obtener token JWT
-2. **Buscar Entrenadores** → Filtrar por especialidad, fecha y disponibilidad
-3. **Agendar Cita** → Reservar sesión con entrenador seleccionado
-4. **Realizar Pago** → Confirmar reserva mediante pago
-5. **Dejar Reseña** → Calificar experiencia
-
-### Para Entrenadores:
-1. **Registro/Login** → Crear cuenta como entrenador
-2. **Configurar Perfil** → Especialidades, experiencia, descripción
-3. **Gestionar Horarios** → Definir disponibilidad semanal
-4. **Crear Sesiones** → Publicar sesiones disponibles
-5. **Recibir Reservas** → Gestionar citas de clientes
-
-## 🔐 Autenticación
-- **Tipo**: Bearer Token (JWT)
-- **Duración**: 24 horas
-- **Formato**: \`Authorization: Bearer <token>\`
-- **Roles**: CLIENTE | ENTRENADOR
-
-## 📌 URL Base
-\`${config.api.prefix}/${config.api.version}\`
+**Autenticación:** Bearer Token (JWT, válido 24 horas)
+**Formato:** Authorization: Bearer <token>
+**Roles:** CLIENTE | ENTRENADOR
+**URL Base:** ${config.api.prefix}/${config.api.version}
       `,
       contact: {
         name: 'Soporte API',
