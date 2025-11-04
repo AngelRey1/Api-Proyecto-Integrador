@@ -13,7 +13,13 @@ export class SupabaseCalendarioDisponibilidadRepository implements CalendarioDis
 
     let query = supabaseClient
       .from(this.tableName)
-      .select(`*, entrenador:id_entrenador(*, usuario:id_usuario(nombre, apellido))`, { count: 'exact' });
+      .select(`
+        *,
+        entrenador:id_entrenador(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        )
+      `, { count: 'exact' });
 
     if (params?.sortBy) {
       const ascending = params.sortOrder === 'asc';
@@ -26,13 +32,22 @@ export class SupabaseCalendarioDisponibilidadRepository implements CalendarioDis
       throw new Error(`Error fetching disponibilidades: ${error.message}`);
     }
 
-    return { disponibilidades: data || [], total: count || 0 };
+    return {
+      disponibilidades: data || [],
+      total: count || 0,
+    };
   }
 
   async findById(id: number): Promise<CalendarioDisponibilidad | null> {
     const { data, error } = await supabaseClient
       .from(this.tableName)
-      .select(`*, entrenador:id_entrenador(*, usuario:id_usuario(nombre, apellido))`)
+      .select(`
+        *,
+        entrenador:id_entrenador(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        )
+      `)
       .eq('id_disponibilidad', id)
       .single();
 
@@ -47,7 +62,13 @@ export class SupabaseCalendarioDisponibilidadRepository implements CalendarioDis
   async findByEntrenadorId(entrenadorId: number): Promise<CalendarioDisponibilidad[]> {
     const { data, error } = await supabaseClient
       .from(this.tableName)
-      .select(`*, entrenador:id_entrenador(*, usuario:id_usuario(nombre, apellido))`)
+      .select(`
+        *,
+        entrenador:id_entrenador(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        )
+      `)
       .eq('id_entrenador', entrenadorId);
 
     if (error) {
@@ -60,7 +81,13 @@ export class SupabaseCalendarioDisponibilidadRepository implements CalendarioDis
   async findByFecha(fecha: Date): Promise<CalendarioDisponibilidad[]> {
     const { data, error } = await supabaseClient
       .from(this.tableName)
-      .select(`*, entrenador:id_entrenador(*, usuario:id_usuario(nombre, apellido))`)
+      .select(`
+        *,
+        entrenador:id_entrenador(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        )
+      `)
       .eq('fecha', fecha.toISOString().split('T')[0]);
 
     if (error) {
@@ -70,26 +97,38 @@ export class SupabaseCalendarioDisponibilidadRepository implements CalendarioDis
     return data || [];
   }
 
-  async create(disponibilidadData: CreateCalendarioDisponibilidadData): Promise<CalendarioDisponibilidad> {
-    const { data, error } = await supabaseClient
+  async create(data: CreateCalendarioDisponibilidadData): Promise<CalendarioDisponibilidad> {
+    const { data: result, error } = await supabaseClient
       .from(this.tableName)
-      .insert([disponibilidadData])
-      .select(`*, entrenador:id_entrenador(*, usuario:id_usuario(nombre, apellido))`)
+      .insert([data])
+      .select(`
+        *,
+        entrenador:id_entrenador(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        )
+      `)
       .single();
 
     if (error) {
       throw new Error(`Error creating disponibilidad: ${error.message}`);
     }
 
-    return data;
+    return result;
   }
 
-  async update(id: number, disponibilidadData: UpdateCalendarioDisponibilidadData): Promise<CalendarioDisponibilidad | null> {
-    const { data, error } = await supabaseClient
+  async update(id: number, data: UpdateCalendarioDisponibilidadData): Promise<CalendarioDisponibilidad | null> {
+    const { data: result, error } = await supabaseClient
       .from(this.tableName)
-      .update(disponibilidadData)
+      .update(data)
       .eq('id_disponibilidad', id)
-      .select(`*, entrenador:id_entrenador(*, usuario:id_usuario(nombre, apellido))`)
+      .select(`
+        *,
+        entrenador:id_entrenador(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        )
+      `)
       .single();
 
     if (error) {
@@ -97,7 +136,7 @@ export class SupabaseCalendarioDisponibilidadRepository implements CalendarioDis
       throw new Error(`Error updating disponibilidad: ${error.message}`);
     }
 
-    return data;
+    return result;
   }
 
   async delete(id: number): Promise<boolean> {

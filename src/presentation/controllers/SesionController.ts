@@ -11,7 +11,7 @@ export class SesionController {
    * /sesiones:
    *   get:
    *     summary: Obtener todas las sesiones
-   *     tags: [08. Sesiones]
+   *     tags: [🔧 Sesiones Técnicas]
    *     parameters:
    *       - in: query
    *         name: page
@@ -58,7 +58,7 @@ export class SesionController {
    * /sesiones/{id}:
    *   get:
    *     summary: Obtener sesión por ID
-   *     tags: [08. Sesiones]
+   *     tags: [🔧 Sesiones Técnicas]
    *     parameters:
    *       - in: path
    *         name: id
@@ -90,7 +90,7 @@ export class SesionController {
    * /sesiones/horario/{horarioId}:
    *   get:
    *     summary: Obtener sesiones por ID de horario
-   *     tags: [08. Sesiones]
+   *     tags: [🔧 Sesiones Técnicas]
    *     parameters:
    *       - in: path
    *         name: horarioId
@@ -118,7 +118,7 @@ export class SesionController {
    * /sesiones/fecha/{fecha}:
    *   get:
    *     summary: Obtener sesiones por fecha
-   *     tags: [08. Sesiones]
+   *     tags: [🔧 Sesiones Técnicas]
    *     parameters:
    *       - in: path
    *         name: fecha
@@ -146,7 +146,7 @@ export class SesionController {
    * /sesiones:
    *   post:
    *     summary: Crear una nueva sesión
-   *     tags: [08. Sesiones]
+   *     tags: [🔧 Sesiones Técnicas]
    *     requestBody:
    *       required: true
    *       content:

@@ -5,14 +5,19 @@ import { SupabaseCatalogoActividadesRepository } from '@/infrastructure/reposito
 
 const router = Router();
 
-const actividadRepository = new SupabaseCatalogoActividadesRepository();
-const actividadUseCases = new CatalogoActividadesUseCases(actividadRepository);
-const actividadController = new CatalogoActividadesController(actividadUseCases);
+// Dependency injection
+const actividadesRepository = new SupabaseCatalogoActividadesRepository();
+const actividadesUseCases = new CatalogoActividadesUseCases(actividadesRepository);
+const actividadesController = new CatalogoActividadesController(actividadesUseCases);
 
-router.get('/', (req, res) => actividadController.getActividades(req, res));
-router.get('/:id', (req, res) => actividadController.getActividadById(req, res));
-router.post('/', (req, res) => actividadController.createActividad(req, res));
-router.put('/:id', (req, res) => actividadController.updateActividad(req, res));
-router.delete('/:id', (req, res) => actividadController.deleteActividad(req, res));
+// Routes
+router.get('/', (req, res) => actividadesController.getAll(req, res));
+router.get('/:id', (req, res) => actividadesController.getById(req, res));
+router.get('/entrenador/:entrenadorId', (req, res) => actividadesController.getByEntrenador(req, res));
+router.get('/cliente/:clienteId', (req, res) => actividadesController.getByCliente(req, res));
+router.get('/estado/:estado', (req, res) => actividadesController.getByEstado(req, res));
+router.post('/', (req, res) => actividadesController.create(req, res));
+router.put('/:id', (req, res) => actividadesController.update(req, res));
+router.delete('/:id', (req, res) => actividadesController.delete(req, res));
 
-export { router as catalogoActividadesRoutes };
+export default router;

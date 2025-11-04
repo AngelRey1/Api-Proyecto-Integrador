@@ -15,8 +15,14 @@ export class SupabaseCatalogoActividadesRepository implements CatalogoActividade
       .from(this.tableName)
       .select(`
         *,
-        entrenador:id_entrenador(*),
-        cliente:id_cliente(*),
+        entrenador:id_entrenador(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
+        cliente:id_cliente(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
         deporte:id_deporte(*),
         catalogo:id_catalogo(*)
       `, { count: 'exact' });
@@ -43,8 +49,14 @@ export class SupabaseCatalogoActividadesRepository implements CatalogoActividade
       .from(this.tableName)
       .select(`
         *,
-        entrenador:id_entrenador(*),
-        cliente:id_cliente(*),
+        entrenador:id_entrenador(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
+        cliente:id_cliente(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
         deporte:id_deporte(*),
         catalogo:id_catalogo(*)
       `)
@@ -64,8 +76,14 @@ export class SupabaseCatalogoActividadesRepository implements CatalogoActividade
       .from(this.tableName)
       .select(`
         *,
-        entrenador:id_entrenador(*),
-        cliente:id_cliente(*),
+        entrenador:id_entrenador(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
+        cliente:id_cliente(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
         deporte:id_deporte(*),
         catalogo:id_catalogo(*)
       `)
@@ -83,8 +101,14 @@ export class SupabaseCatalogoActividadesRepository implements CatalogoActividade
       .from(this.tableName)
       .select(`
         *,
-        entrenador:id_entrenador(*),
-        cliente:id_cliente(*),
+        entrenador:id_entrenador(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
+        cliente:id_cliente(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
         deporte:id_deporte(*),
         catalogo:id_catalogo(*)
       `)
@@ -97,14 +121,45 @@ export class SupabaseCatalogoActividadesRepository implements CatalogoActividade
     return data || [];
   }
 
-  async create(actividadData: CreateCatalogoActividadesData): Promise<CatalogoActividades> {
+  async findByEstado(estado: string): Promise<CatalogoActividades[]> {
     const { data, error } = await supabaseClient
       .from(this.tableName)
-      .insert([actividadData])
       .select(`
         *,
-        entrenador:id_entrenador(*),
-        cliente:id_cliente(*),
+        entrenador:id_entrenador(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
+        cliente:id_cliente(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
+        deporte:id_deporte(*),
+        catalogo:id_catalogo(*)
+      `)
+      .eq('estado', estado);
+
+    if (error) {
+      throw new Error(`Error fetching actividades: ${error.message}`);
+    }
+
+    return data || [];
+  }
+
+  async create(data: CreateCatalogoActividadesData): Promise<CatalogoActividades> {
+    const { data: result, error } = await supabaseClient
+      .from(this.tableName)
+      .insert([data])
+      .select(`
+        *,
+        entrenador:id_entrenador(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
+        cliente:id_cliente(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
         deporte:id_deporte(*),
         catalogo:id_catalogo(*)
       `)
@@ -114,18 +169,24 @@ export class SupabaseCatalogoActividadesRepository implements CatalogoActividade
       throw new Error(`Error creating actividad: ${error.message}`);
     }
 
-    return data;
+    return result;
   }
 
-  async update(id: number, actividadData: UpdateCatalogoActividadesData): Promise<CatalogoActividades | null> {
-    const { data, error } = await supabaseClient
+  async update(id: number, data: UpdateCatalogoActividadesData): Promise<CatalogoActividades | null> {
+    const { data: result, error } = await supabaseClient
       .from(this.tableName)
-      .update(actividadData)
+      .update(data)
       .eq('id_actividad', id)
       .select(`
         *,
-        entrenador:id_entrenador(*),
-        cliente:id_cliente(*),
+        entrenador:id_entrenador(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
+        cliente:id_cliente(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
         deporte:id_deporte(*),
         catalogo:id_catalogo(*)
       `)
@@ -136,7 +197,7 @@ export class SupabaseCatalogoActividadesRepository implements CatalogoActividade
       throw new Error(`Error updating actividad: ${error.message}`);
     }
 
-    return data;
+    return result;
   }
 
   async delete(id: number): Promise<boolean> {

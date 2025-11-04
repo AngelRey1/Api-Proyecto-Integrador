@@ -1,6 +1,25 @@
-# Clean Architecture API con Supabase
 
-API REST desarrollada con arquitectura limpia, TypeScript, Express y Supabase.
+# App Deporte API - Sistema de Agendamiento de Entrenadores
+
+API REST para conectar clientes con entrenadores personales de manera simple y eficiente.
+
+## 🎯 Funcionalidad Principal
+
+Esta API resuelve el problema core de **agendar citas con entrenadores** en un flujo simplificado:
+
+### ✨ Flujo de Usuario Optimizado
+1. **Buscar entrenadores** → `GET /agendamiento/buscar-entrenadores`
+2. **Ver disponibilidad** → `GET /agendamiento/disponibilidad/{id}`  
+3. **Agendar cita** → `POST /agendamiento/agendar` ⭐ **ENDPOINT PRINCIPAL**
+4. **Gestionar citas** → `GET /agendamiento/mis-citas`
+
+### 🚀 Ventajas del Nuevo Diseño
+- **Un solo endpoint** para agendar (no múltiples llamadas)
+- **Búsqueda inteligente** con filtros avanzados
+- **Gestión completa** de citas en endpoints dedicados
+- **Documentación clara** en Swagger con ejemplos
+
+## 🏗️ Arquitectura Limpia
 
 ## 🏗️ Arquitectura
 
@@ -24,6 +43,36 @@ src/
     ├── config/         # Configuración
     ├── types/          # Tipos TypeScript
     └── utils/          # Utilidades
+```
+
+## 📖 Ejemplos de Uso
+
+### 1. Buscar Entrenadores Disponibles
+```bash
+GET /api/v1/agendamiento/buscar-entrenadores?deporte=fitness&fecha=2024-12-01&precio_max=50
+```
+
+### 2. Agendar Cita (Funcionalidad Principal)
+```bash
+POST /api/v1/agendamiento/agendar
+Content-Type: application/json
+Authorization: Bearer {token}
+
+{
+  "entrenador_id": "uuid-del-entrenador",
+  "fecha_hora": "2024-12-15T10:00:00Z",
+  "duracion_minutos": 60,
+  "deporte_id": "uuid-del-deporte",
+  "notas": "Primera sesión, objetivo: mejorar condición física",
+  "ubicacion_preferida": "Gimnasio Central",
+  "metodo_pago": "tarjeta"
+}
+```
+
+### 3. Ver Mis Citas
+```bash
+GET /api/v1/agendamiento/mis-citas?estado=pendiente
+Authorization: Bearer {token}
 ```
 
 ## 🚀 Instalación y Configuración

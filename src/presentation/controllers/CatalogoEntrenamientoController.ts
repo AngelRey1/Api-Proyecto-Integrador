@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { CatalogoEntrenamientoUseCases } from '@/application/use-cases/CatalogoEntrenamientoUseCases';
-import { ResponseUtil } from '@/shared/utils/response';
+import { CreateCatalogoEntrenamientoData, UpdateCatalogoEntrenamientoData } from '@/domain/entities/CatalogoEntrenamiento';
 import { PaginationParams } from '@/shared/types/api';
 
 export class CatalogoEntrenamientoController {
@@ -8,89 +8,130 @@ export class CatalogoEntrenamientoController {
 
   /**
    * @swagger
-   * /catalogos-entrenamiento:
+   * /catalogo/entrenamientos:
    *   get:
-   *     summary: Obtener todos los catálogos de entrenamiento
-   *     tags: [05. Catálogos - Entrenamientos]
-   *     parameters:
-   *       - in: query
-   *         name: page
-   *         schema:
-   *           type: integer
-   *           minimum: 1
-   *         description: Número de página
-   *       - in: query
-   *         name: limit
-   *         schema:
-   *           type: integer
-   *           minimum: 1
-   *           maximum: 100
-   *         description: Número de elementos por página
+   *     tags: [💪 Catálogo de Entrenamientos]
+   *     summary: 💪 Listar tipos de entrenamientos
+   *     description: |
+   *       Obtiene el catálogo completo de tipos de entrenamientos disponibles.
+   *       Incluye entrenamientos como: Funcional, Cardio, Yoga, Pilates, etc.
+   *     security:
+   *       - bearerAuth: []
    *     responses:
    *       200:
-   *         description: Lista de catálogos de entrenamiento
+   *         description: Catálogo obtenido exitosamente
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 data:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *                     properties:
+   *                       id_catalogo:
+   *                         type: integer
+   *                         example: 1
+   *                       nombre:
+   *                         type: string
+   *                         example: "Entrenamiento Funcional"
+   *                       descripcion:
+   *                         type: string
+   *                         example: "Ejercicios funcionales para el día a día"
+   *                       nivel:
+   *                         type: string
+   *                         enum: [BASICO, INTERMEDIO, AVANZADO]
+   *                         example: "INTERMEDIO"
    */
-  async getCatalogos(req: Request, res: Response): Promise<Response> {
+  async getAll(req: Request, res: Response): Promise<void> {
     try {
       const params: PaginationParams = {
         page: parseInt(req.query.page as string) || 1,
-        limit: Math.min(parseInt(req.query.limit as string) || 10, 100),
+        limit: parseInt(req.query.limit as string) || 10,
         sortBy: req.query.sortBy as string,
-        sortOrder: (req.query.sortOrder as 'asc' | 'desc') || 'asc',
+        sortOrder: req.query.sortOrder as 'asc' | 'desc',
       };
 
-      const { catalogos, total } = await this.catalogoUseCases.getAllCatalogos(params);
-      const totalPages = Math.ceil(total / params.limit!);
-
-      return ResponseUtil.paginated(res, catalogos, {
-        page: params.page!,
-        limit: params.limit!,
-        total,
-        totalPages,
+      const result = await this.catalogoUseCases.getAllCatalogos(params);
+      
+      res.status(200).json({
+        success: true,
+        data: result.catalogos,
+        pagination: {
+          page: params.page,
+          limit: params.limit,
+          total: result.total,
+          totalPages: Math.ceil(result.total / (params.limit || 10)),
+        },
       });
     } catch (error) {
-      return ResponseUtil.error(res, (error as Error).message, 500);
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching catalogos',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   }
 
-  /**
-   * @swagger
-   * /catalogos-entrenamiento/{id}:
-   *   get:
-   *     summary: Obtener catálogo por ID
-   *     tags: [05. Catálogos - Entrenamientos]
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: integer
-   *         description: ID del catálogo
-   *     responses:
-   *       200:
-   *         description: Catálogo encontrado
-   *       404:
-   *         $ref: '#/components/responses/NotFound'
-   */
-  async getCatalogoById(req: Request, res: Response): Promise<Response> {
+  async getById(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
-      const catalogoId = parseInt(id);
-      const catalogo = await this.catalogoUseCases.getCatalogoById(catalogoId);
-      return ResponseUtil.success(res, catalogo);
+      const id = parseInt(req.params.id);
+      const catalogo = await this.catalogoUseCases.getCatalogoById(id);
+      
+      if (!catalogo) {
+        res.status(404).json({
+          success: false,
+          message: 'Catalogo not found',
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: catalogo,
+      });
     } catch (error) {
-      const message = (error as Error).message;
-      const statusCode = message.includes('no encontrado') ? 404 : 500;
-      return ResponseUtil.error(res, message, statusCode);
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching catalogo',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async getByNivel(req: Request, res: Response): Promise<void> {
+    try {
+      const nivel = req.params.nivel;
+      const catalogos = await this.catalogoUseCases.getCatalogosByNivel(nivel);
+      
+      res.status(200).json({
+        success: true,
+        data: catalogos,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching catalogos by nivel',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   }
 
   /**
    * @swagger
-   * /catalogos-entrenamiento:
+   * /catalogo/entrenamientos:
    *   post:
-   *     summary: Crear un nuevo catálogo de entrenamiento
-   *     tags: [05. Catálogos - Entrenamientos]
+   *     tags: [💪 Catálogo de Entrenamientos]
+   *     summary: 💪 Crear nuevo tipo de entrenamiento
+   *     description: |
+   *       **Solo Administradores** - Agrega un nuevo tipo de entrenamiento al catálogo.
+   *       Ejemplos: CrossFit, HIIT, Pilates Avanzado, etc.
+   *     security:
+   *       - bearerAuth: []
    *     requestBody:
    *       required: true
    *       content:
@@ -103,55 +144,89 @@ export class CatalogoEntrenamientoController {
    *             properties:
    *               nombre:
    *                 type: string
-   *                 minLength: 2
+   *                 example: "HIIT Avanzado"
    *               descripcion:
    *                 type: string
+   *                 example: "Entrenamiento de intervalos de alta intensidad"
    *               nivel:
    *                 type: string
    *                 enum: [BASICO, INTERMEDIO, AVANZADO]
+   *                 example: "AVANZADO"
    *     responses:
    *       201:
-   *         description: Catálogo creado exitosamente
-   *       400:
-   *         $ref: '#/components/responses/BadRequest'
+   *         description: Tipo de entrenamiento creado exitosamente
    */
-  async createCatalogo(req: Request, res: Response): Promise<Response> {
+  async create(req: Request, res: Response): Promise<void> {
     try {
-      const catalogo = await this.catalogoUseCases.createCatalogo(req.body);
-      return ResponseUtil.success(res, catalogo, 'Catálogo creado exitosamente', 201);
-    } catch (error) {
-      const message = (error as Error).message;
-      const statusCode = message.includes('ya existe') || message.includes('inválido') ? 400 : 500;
-      return ResponseUtil.error(res, message, statusCode);
-    }
-  }
-
-  async updateCatalogo(req: Request, res: Response): Promise<Response> {
-    try {
-      const { id } = req.params;
-      const catalogoId = parseInt(id);
-      const catalogo = await this.catalogoUseCases.updateCatalogo(catalogoId, req.body);
-      return ResponseUtil.success(res, catalogo, 'Catálogo actualizado exitosamente');
-    } catch (error) {
-      const message = (error as Error).message;
-      let statusCode = 500;
-      if (message.includes('no encontrado')) statusCode = 404;
-      else if (message.includes('ya existe') || message.includes('inválido')) statusCode = 400;
+      const data: CreateCatalogoEntrenamientoData = req.body;
+      const catalogo = await this.catalogoUseCases.createCatalogo(data);
       
-      return ResponseUtil.error(res, message, statusCode);
+      res.status(201).json({
+        success: true,
+        data: catalogo,
+        message: 'Catalogo created successfully',
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error creating catalogo',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   }
 
-  async deleteCatalogo(req: Request, res: Response): Promise<Response> {
+  async update(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
-      const catalogoId = parseInt(id);
-      await this.catalogoUseCases.deleteCatalogo(catalogoId);
-      return ResponseUtil.success(res, null, 'Catálogo eliminado exitosamente');
+      const id = parseInt(req.params.id);
+      const data: UpdateCatalogoEntrenamientoData = req.body;
+      
+      const catalogo = await this.catalogoUseCases.updateCatalogo(id, data);
+      
+      if (!catalogo) {
+        res.status(404).json({
+          success: false,
+          message: 'Catalogo not found',
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: catalogo,
+        message: 'Catalogo updated successfully',
+      });
     } catch (error) {
-      const message = (error as Error).message;
-      const statusCode = message.includes('no encontrado') ? 404 : 500;
-      return ResponseUtil.error(res, message, statusCode);
+      res.status(500).json({
+        success: false,
+        message: 'Error updating catalogo',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  async delete(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await this.catalogoUseCases.deleteCatalogo(id);
+      
+      if (!deleted) {
+        res.status(404).json({
+          success: false,
+          message: 'Catalogo not found',
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Catalogo deleted successfully',
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error deleting catalogo',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   }
 }

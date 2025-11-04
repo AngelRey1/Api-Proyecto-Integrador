@@ -13,7 +13,10 @@ export class SupabaseRetroalimentacionAppRepository implements Retroalimentacion
 
     let query = supabaseClient
       .from(this.tableName)
-      .select(`*, usuario:id_usuario(nombre, apellido, email)`, { count: 'exact' });
+      .select(`
+        *,
+        usuario:id_usuario(id_usuario, nombre, apellido, email)
+      `, { count: 'exact' });
 
     if (params?.sortBy) {
       const ascending = params.sortOrder === 'asc';
@@ -26,13 +29,19 @@ export class SupabaseRetroalimentacionAppRepository implements Retroalimentacion
       throw new Error(`Error fetching retroalimentaciones: ${error.message}`);
     }
 
-    return { retroalimentaciones: data || [], total: count || 0 };
+    return {
+      retroalimentaciones: data || [],
+      total: count || 0,
+    };
   }
 
   async findById(id: number): Promise<RetroalimentacionApp | null> {
     const { data, error } = await supabaseClient
       .from(this.tableName)
-      .select(`*, usuario:id_usuario(nombre, apellido, email)`)
+      .select(`
+        *,
+        usuario:id_usuario(id_usuario, nombre, apellido, email)
+      `)
       .eq('id_feedback', id)
       .single();
 
@@ -47,9 +56,11 @@ export class SupabaseRetroalimentacionAppRepository implements Retroalimentacion
   async findByUsuarioId(usuarioId: number): Promise<RetroalimentacionApp[]> {
     const { data, error } = await supabaseClient
       .from(this.tableName)
-      .select(`*, usuario:id_usuario(nombre, apellido, email)`)
-      .eq('id_usuario', usuarioId)
-      .order('fecha_feedback', { ascending: false });
+      .select(`
+        *,
+        usuario:id_usuario(id_usuario, nombre, apellido, email)
+      `)
+      .eq('id_usuario', usuarioId);
 
     if (error) {
       throw new Error(`Error fetching retroalimentaciones: ${error.message}`);
@@ -61,9 +72,11 @@ export class SupabaseRetroalimentacionAppRepository implements Retroalimentacion
   async findByTipo(tipo: string): Promise<RetroalimentacionApp[]> {
     const { data, error } = await supabaseClient
       .from(this.tableName)
-      .select(`*, usuario:id_usuario(nombre, apellido, email)`)
-      .eq('tipo', tipo)
-      .order('fecha_feedback', { ascending: false });
+      .select(`
+        *,
+        usuario:id_usuario(id_usuario, nombre, apellido, email)
+      `)
+      .eq('tipo', tipo);
 
     if (error) {
       throw new Error(`Error fetching retroalimentaciones: ${error.message}`);
@@ -72,26 +85,32 @@ export class SupabaseRetroalimentacionAppRepository implements Retroalimentacion
     return data || [];
   }
 
-  async create(retroalimentacionData: CreateRetroalimentacionAppData): Promise<RetroalimentacionApp> {
-    const { data, error } = await supabaseClient
+  async create(data: CreateRetroalimentacionAppData): Promise<RetroalimentacionApp> {
+    const { data: result, error } = await supabaseClient
       .from(this.tableName)
-      .insert([retroalimentacionData])
-      .select(`*, usuario:id_usuario(nombre, apellido, email)`)
+      .insert([data])
+      .select(`
+        *,
+        usuario:id_usuario(id_usuario, nombre, apellido, email)
+      `)
       .single();
 
     if (error) {
       throw new Error(`Error creating retroalimentacion: ${error.message}`);
     }
 
-    return data;
+    return result;
   }
 
-  async update(id: number, retroalimentacionData: UpdateRetroalimentacionAppData): Promise<RetroalimentacionApp | null> {
-    const { data, error } = await supabaseClient
+  async update(id: number, data: UpdateRetroalimentacionAppData): Promise<RetroalimentacionApp | null> {
+    const { data: result, error } = await supabaseClient
       .from(this.tableName)
-      .update(retroalimentacionData)
+      .update(data)
       .eq('id_feedback', id)
-      .select(`*, usuario:id_usuario(nombre, apellido, email)`)
+      .select(`
+        *,
+        usuario:id_usuario(id_usuario, nombre, apellido, email)
+      `)
       .single();
 
     if (error) {
@@ -99,7 +118,7 @@ export class SupabaseRetroalimentacionAppRepository implements Retroalimentacion
       throw new Error(`Error updating retroalimentacion: ${error.message}`);
     }
 
-    return data;
+    return result;
   }
 
   async delete(id: number): Promise<boolean> {

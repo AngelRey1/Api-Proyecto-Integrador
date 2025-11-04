@@ -11,10 +11,11 @@ const catalogoUseCases = new CatalogoEntrenamientoUseCases(catalogoRepository);
 const catalogoController = new CatalogoEntrenamientoController(catalogoUseCases);
 
 // Routes
-router.get('/', (req, res) => catalogoController.getCatalogos(req, res));
-router.get('/:id', (req, res) => catalogoController.getCatalogoById(req, res));
-router.post('/', (req, res) => catalogoController.createCatalogo(req, res));
-router.put('/:id', (req, res) => catalogoController.updateCatalogo(req, res));
-router.delete('/:id', (req, res) => catalogoController.deleteCatalogo(req, res));
+router.get('/', (req, res) => catalogoController.getAll(req, res));
+router.get('/:id', (req, res) => catalogoController.getById(req, res));
+router.get('/nivel/:nivel', (req, res) => catalogoController.getByNivel(req, res));
+router.post('/', (req, res) => catalogoController.create(req, res));
+router.put('/:id', (req, res) => catalogoController.update(req, res));
+router.delete('/:id', (req, res) => catalogoController.delete(req, res));
 
-export { router as catalogoEntrenamientoRoutes };
+export default router;

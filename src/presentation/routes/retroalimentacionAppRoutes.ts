@@ -5,14 +5,18 @@ import { SupabaseRetroalimentacionAppRepository } from '@/infrastructure/reposit
 
 const router = Router();
 
+// Dependency injection
 const retroalimentacionRepository = new SupabaseRetroalimentacionAppRepository();
 const retroalimentacionUseCases = new RetroalimentacionAppUseCases(retroalimentacionRepository);
 const retroalimentacionController = new RetroalimentacionAppController(retroalimentacionUseCases);
 
-router.get('/', (req, res) => retroalimentacionController.getRetroalimentaciones(req, res));
-router.get('/:id', (req, res) => retroalimentacionController.getRetroalimentacionById(req, res));
-router.post('/', (req, res) => retroalimentacionController.createRetroalimentacion(req, res));
-router.put('/:id', (req, res) => retroalimentacionController.updateRetroalimentacion(req, res));
-router.delete('/:id', (req, res) => retroalimentacionController.deleteRetroalimentacion(req, res));
+// Routes
+router.get('/', (req, res) => retroalimentacionController.getAll(req, res));
+router.get('/:id', (req, res) => retroalimentacionController.getById(req, res));
+router.get('/usuario/:usuarioId', (req, res) => retroalimentacionController.getByUsuario(req, res));
+router.get('/tipo/:tipo', (req, res) => retroalimentacionController.getByTipo(req, res));
+router.post('/', (req, res) => retroalimentacionController.create(req, res));
+router.put('/:id', (req, res) => retroalimentacionController.update(req, res));
+router.delete('/:id', (req, res) => retroalimentacionController.delete(req, res));
 
-export { router as retroalimentacionAppRoutes };
+export default router;

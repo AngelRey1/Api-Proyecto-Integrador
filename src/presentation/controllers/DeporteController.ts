@@ -11,7 +11,7 @@ export class DeporteController {
    * /deportes:
    *   get:
    *     summary: Obtener todos los deportes
-   *     tags: [04. Catálogos - Deportes]
+   *     tags: [🏆 Catálogo de Deportes]
    *     parameters:
    *       - in: query
    *         name: page
@@ -69,7 +69,7 @@ export class DeporteController {
    * /deportes/{id}:
    *   get:
    *     summary: Obtener deporte por ID
-   *     tags: [04. Catálogos - Deportes]
+   *     tags: [🏆 Catálogo de Deportes]
    *     parameters:
    *       - in: path
    *         name: id
@@ -110,7 +110,7 @@ export class DeporteController {
    * /deportes:
    *   post:
    *     summary: Crear un nuevo deporte
-   *     tags: [04. Catálogos - Deportes]
+   *     tags: [🏆 Catálogo de Deportes]
    *     requestBody:
    *       required: true
    *       content:
@@ -148,7 +148,7 @@ export class DeporteController {
    * /deportes/{id}:
    *   put:
    *     summary: Actualizar deporte
-   *     tags: [04. Catálogos - Deportes]
+   *     tags: [🏆 Catálogo de Deportes]
    *     parameters:
    *       - in: path
    *         name: id
@@ -198,7 +198,7 @@ export class DeporteController {
    * /deportes/{id}:
    *   delete:
    *     summary: Eliminar deporte
-   *     tags: [04. Catálogos - Deportes]
+   *     tags: [🏆 Catálogo de Deportes]
    *     parameters:
    *       - in: path
    *         name: id

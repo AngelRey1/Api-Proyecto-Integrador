@@ -11,7 +11,7 @@ export class HorarioController {
    * /horarios:
    *   get:
    *     summary: Obtener todos los horarios
-   *     tags: [07. Horarios y Disponibilidad]
+   *     tags: [📅 Disponibilidad y Horarios]
    *     parameters:
    *       - in: query
    *         name: page
@@ -69,7 +69,7 @@ export class HorarioController {
    * /horarios/{id}:
    *   get:
    *     summary: Obtener horario por ID
-   *     tags: [07. Horarios y Disponibilidad]
+   *     tags: [📅 Disponibilidad y Horarios]
    *     parameters:
    *       - in: path
    *         name: id
@@ -110,7 +110,7 @@ export class HorarioController {
    * /horarios/entrenador/{entrenadorId}:
    *   get:
    *     summary: Obtener horarios por ID de entrenador
-   *     tags: [07. Horarios y Disponibilidad]
+   *     tags: [📅 Disponibilidad y Horarios]
    *     parameters:
    *       - in: path
    *         name: entrenadorId
@@ -149,7 +149,7 @@ export class HorarioController {
    * /horarios:
    *   post:
    *     summary: Crear un nuevo horario
-   *     tags: [07. Horarios y Disponibilidad]
+   *     tags: [📅 Disponibilidad y Horarios]
    *     requestBody:
    *       required: true
    *       content:
@@ -187,7 +187,7 @@ export class HorarioController {
    * /horarios/{id}:
    *   put:
    *     summary: Actualizar horario
-   *     tags: [07. Horarios y Disponibilidad]
+   *     tags: [📅 Disponibilidad y Horarios]
    *     parameters:
    *       - in: path
    *         name: id
@@ -238,7 +238,7 @@ export class HorarioController {
    * /horarios/{id}:
    *   delete:
    *     summary: Eliminar horario
-   *     tags: [07. Horarios y Disponibilidad]
+   *     tags: [📅 Disponibilidad y Horarios]
    *     parameters:
    *       - in: path
    *         name: id

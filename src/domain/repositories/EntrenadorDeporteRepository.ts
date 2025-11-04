@@ -2,11 +2,9 @@ import { EntrenadorDeporte, CreateEntrenadorDeporteData, UpdateEntrenadorDeporte
 import { PaginationParams } from '@/shared/types/api';
 
 export interface EntrenadorDeporteRepository {
-  findAll(params: PaginationParams): Promise<{ entrenadorDeportes: EntrenadorDeporte[]; total: number }>;
-  findById(id: number): Promise<EntrenadorDeporte | null>;
+  findAll(params?: PaginationParams): Promise<{ entrenadorDeportes: EntrenadorDeporte[]; total: number }>;
   findByEntrenadorId(entrenadorId: number): Promise<EntrenadorDeporte[]>;
   findByDeporteId(deporteId: number): Promise<EntrenadorDeporte[]>;
   create(data: CreateEntrenadorDeporteData): Promise<EntrenadorDeporte>;
-  update(id: number, data: UpdateEntrenadorDeporteData): Promise<EntrenadorDeporte>;
-  delete(id: number): Promise<void>;
+  delete(entrenadorId: number, deporteId: number): Promise<boolean>;
 }

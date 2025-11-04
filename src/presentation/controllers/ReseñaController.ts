@@ -11,7 +11,7 @@ export class ReseñaController {
    * /reseñas:
    *   get:
    *     summary: Obtener todas las reseñas
-   *     tags: [11. Reseñas y Comentarios]
+   *     tags: [📊 4. Seguimiento y Evaluación]
    */
   async getReseñas(req: Request, res: Response): Promise<Response> {
     try {

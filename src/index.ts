@@ -7,7 +7,7 @@ async function startServer() {
     // Test database connection
     console.log('Testing Supabase connection...');
     const isConnected = await supabaseConnection.testConnection();
-    
+
     if (!isConnected) {
       console.warn('Warning: Could not verify Supabase connection');
     } else {

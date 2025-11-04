@@ -47,6 +47,19 @@ export class SupabaseCatalogoEntrenamientoRepository implements CatalogoEntrenam
     return data;
   }
 
+  async findByNivel(nivel: string): Promise<CatalogoEntrenamiento[]> {
+    const { data, error } = await supabaseClient
+      .from(this.tableName)
+      .select('*')
+      .eq('nivel', nivel);
+
+    if (error) {
+      throw new Error(`Error fetching catalogos: ${error.message}`);
+    }
+
+    return data || [];
+  }
+
   async findByNombre(nombre: string): Promise<CatalogoEntrenamiento | null> {
     const { data, error } = await supabaseClient
       .from(this.tableName)
@@ -62,26 +75,26 @@ export class SupabaseCatalogoEntrenamientoRepository implements CatalogoEntrenam
     return data;
   }
 
-  async create(catalogoData: CreateCatalogoEntrenamientoData): Promise<CatalogoEntrenamiento> {
-    const { data, error } = await supabaseClient
+  async create(data: CreateCatalogoEntrenamientoData): Promise<CatalogoEntrenamiento> {
+    const { data: result, error } = await supabaseClient
       .from(this.tableName)
-      .insert([catalogoData])
-      .select()
+      .insert([data])
+      .select('*')
       .single();
 
     if (error) {
       throw new Error(`Error creating catalogo: ${error.message}`);
     }
 
-    return data;
+    return result;
   }
 
-  async update(id: number, catalogoData: UpdateCatalogoEntrenamientoData): Promise<CatalogoEntrenamiento | null> {
-    const { data, error } = await supabaseClient
+  async update(id: number, data: UpdateCatalogoEntrenamientoData): Promise<CatalogoEntrenamiento | null> {
+    const { data: result, error } = await supabaseClient
       .from(this.tableName)
-      .update(catalogoData)
+      .update(data)
       .eq('id_catalogo', id)
-      .select()
+      .select('*')
       .single();
 
     if (error) {
@@ -89,7 +102,7 @@ export class SupabaseCatalogoEntrenamientoRepository implements CatalogoEntrenam
       throw new Error(`Error updating catalogo: ${error.message}`);
     }
 
-    return data;
+    return result;
   }
 
   async delete(id: number): Promise<boolean> {

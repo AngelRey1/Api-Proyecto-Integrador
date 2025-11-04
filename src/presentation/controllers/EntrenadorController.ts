@@ -11,7 +11,7 @@ export class EntrenadorController {
    * /entrenadores:
    *   get:
    *     summary: Obtener todos los entrenadores
-   *     tags: [03. Gestión de Perfiles - Entrenadores]
+   *     tags: [🏃‍♂️ Perfiles de Entrenadores]
    *     parameters:
    *       - in: query
    *         name: page
@@ -69,7 +69,7 @@ export class EntrenadorController {
    * /entrenadores/{id}:
    *   get:
    *     summary: Obtener entrenador por ID
-   *     tags: [03. Gestión de Perfiles - Entrenadores]
+   *     tags: [🏃‍♂️ Perfiles de Entrenadores]
    *     parameters:
    *       - in: path
    *         name: id
@@ -110,7 +110,7 @@ export class EntrenadorController {
    * /entrenadores:
    *   post:
    *     summary: Crear un nuevo entrenador
-   *     tags: [03. Gestión de Perfiles - Entrenadores]
+   *     tags: [🏃‍♂️ Perfiles de Entrenadores]
    *     requestBody:
    *       required: true
    *       content:
@@ -148,7 +148,7 @@ export class EntrenadorController {
    * /entrenadores/{id}:
    *   put:
    *     summary: Actualizar entrenador
-   *     tags: [03. Gestión de Perfiles - Entrenadores]
+   *     tags: [🏃‍♂️ Perfiles de Entrenadores]
    *     parameters:
    *       - in: path
    *         name: id
@@ -199,7 +199,7 @@ export class EntrenadorController {
    * /entrenadores/{id}:
    *   delete:
    *     summary: Eliminar entrenador
-   *     tags: [03. Gestión de Perfiles - Entrenadores]
+   *     tags: [🏃‍♂️ Perfiles de Entrenadores]
    *     parameters:
    *       - in: path
    *         name: id

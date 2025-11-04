@@ -10,8 +10,11 @@ export class PagoController {
    * @swagger
    * /pagos:
    *   get:
-   *     summary: Obtener todos los pagos
-   *     tags: [10. Pagos]
+   *     summary: 💰 Listar historial de pagos
+   *     tags: [💰 3. Gestión de Pagos]
+   *     description: |
+   *       Obtiene el historial completo de pagos del usuario autenticado.
+   *       Incluye información de reservas asociadas.
    *     parameters:
    *       - in: query
    *         name: page
@@ -58,7 +61,7 @@ export class PagoController {
    * /pagos/{id}:
    *   get:
    *     summary: Obtener pago por ID
-   *     tags: [10. Pagos]
+   *     tags: [💰 3. Gestión de Pagos]
    *     parameters:
    *       - in: path
    *         name: id
@@ -90,7 +93,7 @@ export class PagoController {
    * /pagos:
    *   post:
    *     summary: Crear un nuevo pago
-   *     tags: [10. Pagos]
+   *     tags: [💰 3. Gestión de Pagos]
    *     requestBody:
    *       required: true
    *       content:

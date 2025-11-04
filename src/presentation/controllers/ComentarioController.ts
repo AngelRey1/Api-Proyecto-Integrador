@@ -11,7 +11,7 @@ export class ComentarioController {
    * /comentarios:
    *   get:
    *     summary: Obtener todos los comentarios
-   *     tags: [11. Reseñas y Comentarios]
+   *     tags: [📊 4. Seguimiento y Evaluación]
    *     security:
    *       - bearerAuth: []
    *     parameters:
@@ -100,7 +100,7 @@ export class ComentarioController {
    * /comentarios/{id}:
    *   get:
    *     summary: Obtener comentario por ID
-   *     tags: [11. Reseñas y Comentarios]
+   *     tags: [📊 4. Seguimiento y Evaluación]
    *     security:
    *       - bearerAuth: []
    *     parameters:
@@ -147,7 +147,7 @@ export class ComentarioController {
    * /comentarios:
    *   post:
    *     summary: Crear nuevo comentario
-   *     tags: [11. Reseñas y Comentarios]
+   *     tags: [📊 4. Seguimiento y Evaluación]
    *     security:
    *       - bearerAuth: []
    *     requestBody:

@@ -11,7 +11,7 @@ export class ReservaController {
    * /reservas:
    *   get:
    *     summary: Obtener todas las reservas
-   *     tags: [09. Reservas]
+   *     tags: [🔧 Reservas Técnicas]
    *     parameters:
    *       - in: query
    *         name: page
@@ -69,7 +69,7 @@ export class ReservaController {
    * /reservas/{id}:
    *   get:
    *     summary: Obtener reserva por ID
-   *     tags: [09. Reservas]
+   *     tags: [🔧 Reservas Técnicas]
    *     parameters:
    *       - in: path
    *         name: id
@@ -110,7 +110,7 @@ export class ReservaController {
    * /reservas:
    *   post:
    *     summary: Crear una nueva reserva
-   *     tags: [09. Reservas]
+   *     tags: [🔧 Reservas Técnicas]
    *     requestBody:
    *       required: true
    *       content:
@@ -148,7 +148,7 @@ export class ReservaController {
    * /reservas/{id}:
    *   put:
    *     summary: Actualizar reserva
-   *     tags: [09. Reservas]
+   *     tags: [🔧 Reservas Técnicas]
    *     parameters:
    *       - in: path
    *         name: id
@@ -193,7 +193,7 @@ export class ReservaController {
    * /reservas/{id}:
    *   delete:
    *     summary: Eliminar reserva
-   *     tags: [09. Reservas]
+   *     tags: [🔧 Reservas Técnicas]
    *     parameters:
    *       - in: path
    *         name: id

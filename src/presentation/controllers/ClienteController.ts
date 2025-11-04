@@ -11,7 +11,7 @@ export class ClienteController {
    * /clientes:
    *   get:
    *     summary: Obtener todos los clientes
-   *     tags: [02. Gestión de Perfiles - Clientes]
+   *     tags: [👤 Perfiles de Clientes]
    *     parameters:
    *       - in: query
    *         name: page
@@ -69,7 +69,7 @@ export class ClienteController {
    * /clientes/{id}:
    *   get:
    *     summary: Obtener cliente por ID
-   *     tags: [02. Gestión de Perfiles - Clientes]
+   *     tags: [👤 Perfiles de Clientes]
    *     parameters:
    *       - in: path
    *         name: id
@@ -110,7 +110,7 @@ export class ClienteController {
    * /clientes:
    *   post:
    *     summary: Crear un nuevo cliente
-   *     tags: [02. Gestión de Perfiles - Clientes]
+   *     tags: [👤 Perfiles de Clientes]
    *     requestBody:
    *       required: true
    *       content:
@@ -148,7 +148,7 @@ export class ClienteController {
    * /clientes/{id}:
    *   put:
    *     summary: Actualizar cliente
-   *     tags: [02. Gestión de Perfiles - Clientes]
+   *     tags: [👤 Perfiles de Clientes]
    *     parameters:
    *       - in: path
    *         name: id
@@ -196,7 +196,7 @@ export class ClienteController {
    * /clientes/{id}:
    *   delete:
    *     summary: Eliminar cliente
-   *     tags: [02. Gestión de Perfiles - Clientes]
+   *     tags: [👤 Perfiles de Clientes]
    *     parameters:
    *       - in: path
    *         name: id

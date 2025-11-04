@@ -11,7 +11,7 @@ export class NotificacionController {
    * /notificaciones:
    *   get:
    *     summary: Obtener todas las notificaciones
-   *     tags: [12. Sistema - Notificaciones]
+   *     tags: [🔔 5. Notificaciones y Comunicación]
    */
   async getNotificaciones(req: Request, res: Response): Promise<Response> {
     try {
@@ -54,7 +54,7 @@ export class NotificacionController {
    * /notificaciones/usuario/{usuarioId}/no-leidas:
    *   get:
    *     summary: Obtener notificaciones no leídas de un usuario
-   *     tags: [12. Sistema - Notificaciones]
+   *     tags: [🔔 5. Notificaciones y Comunicación]
    */
   async getNotificacionesNoLeidas(req: Request, res: Response): Promise<Response> {
     try {
@@ -72,7 +72,7 @@ export class NotificacionController {
    * /notificaciones/{id}/marcar-leida:
    *   put:
    *     summary: Marcar notificación como leída
-   *     tags: [12. Sistema - Notificaciones]
+   *     tags: [🔔 5. Notificaciones y Comunicación]
    */
   async marcarComoLeida(req: Request, res: Response): Promise<Response> {
     try {

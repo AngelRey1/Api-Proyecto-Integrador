@@ -5,14 +5,18 @@ import { SupabaseCalendarioDisponibilidadRepository } from '@/infrastructure/rep
 
 const router = Router();
 
-const disponibilidadRepository = new SupabaseCalendarioDisponibilidadRepository();
-const disponibilidadUseCases = new CalendarioDisponibilidadUseCases(disponibilidadRepository);
-const disponibilidadController = new CalendarioDisponibilidadController(disponibilidadUseCases);
+// Dependency injection
+const calendarioRepository = new SupabaseCalendarioDisponibilidadRepository();
+const calendarioUseCases = new CalendarioDisponibilidadUseCases(calendarioRepository);
+const calendarioController = new CalendarioDisponibilidadController(calendarioUseCases);
 
-router.get('/', (req, res) => disponibilidadController.getDisponibilidades(req, res));
-router.get('/:id', (req, res) => disponibilidadController.getDisponibilidadById(req, res));
-router.post('/', (req, res) => disponibilidadController.createDisponibilidad(req, res));
-router.put('/:id', (req, res) => disponibilidadController.updateDisponibilidad(req, res));
-router.delete('/:id', (req, res) => disponibilidadController.deleteDisponibilidad(req, res));
+// Routes
+router.get('/', (req, res) => calendarioController.getAll(req, res));
+router.get('/:id', (req, res) => calendarioController.getById(req, res));
+router.get('/entrenador/:entrenadorId', (req, res) => calendarioController.getByEntrenador(req, res));
+router.get('/fecha/:fecha', (req, res) => calendarioController.getByFecha(req, res));
+router.post('/', (req, res) => calendarioController.create(req, res));
+router.put('/:id', (req, res) => calendarioController.update(req, res));
+router.delete('/:id', (req, res) => calendarioController.delete(req, res));
 
-export { router as calendarioDisponibilidadRoutes };
+export default router;

@@ -1,33 +1,31 @@
 import { EntrenadorDeporteRepository } from '@/domain/repositories/EntrenadorDeporteRepository';
-import { EntrenadorDeporte, CreateEntrenadorDeporteData, UpdateEntrenadorDeporteData } from '@/domain/entities/EntrenadorDeporte';
+import { EntrenadorDeporte, CreateEntrenadorDeporteData } from '@/domain/entities/EntrenadorDeporte';
 import { PaginationParams } from '@/shared/types/api';
-import { supabaseConnection } from '@/infrastructure/database/supabase';
+import { supabaseClient } from '@/infrastructure/database/supabase';
 
 export class SupabaseEntrenadorDeporteRepository implements EntrenadorDeporteRepository {
-  private supabase = supabaseConnection.getClient();
+  private readonly tableName = 'entrenador_deporte';
 
-  async findAll(params: PaginationParams): Promise<{ entrenadorDeportes: EntrenadorDeporte[]; total: number }> {
-    const { page = 1, limit = 10, sortBy = 'id_entrenador_deporte', sortOrder = 'asc' } = params;
+  async findAll(params?: PaginationParams): Promise<{ entrenadorDeportes: EntrenadorDeporte[]; total: number }> {
+    const page = params?.page || 1;
+    const limit = params?.limit || 10;
     const offset = (page - 1) * limit;
 
-    // Obtener total de registros
-    const { count } = await this.supabase
-      .from('entrenador_deporte')
-      .select('*', { count: 'exact', head: true });
-
-    // Obtener registros paginados con relaciones
-    const { data, error } = await this.supabase
-      .from('entrenador_deporte')
+    let query = supabaseClient
+      .from(this.tableName)
       .select(`
         *,
-        entrenador:entrenador(id_entrenador, id_usuario, especialidad, experiencia, usuario:usuario(nombre, apellido, email)),
-        deporte:deporte(id_deporte, nombre, descripcion, nivel)
-      `)
-      .order(sortBy, { ascending: sortOrder === 'asc' })
-      .range(offset, offset + limit - 1);
+        entrenador:id_entrenador(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
+        deporte:id_deporte(*)
+      `, { count: 'exact' });
+
+    const { data, error, count } = await query.range(offset, offset + limit - 1);
 
     if (error) {
-      throw new Error(`Error al obtener entrenador-deportes: ${error.message}`);
+      throw new Error(`Error fetching entrenador deportes: ${error.message}`);
     }
 
     return {
@@ -36,104 +34,78 @@ export class SupabaseEntrenadorDeporteRepository implements EntrenadorDeporteRep
     };
   }
 
-  async findById(id: number): Promise<EntrenadorDeporte | null> {
-    const { data, error } = await this.supabase
-      .from('entrenador_deporte')
-      .select(`
-        *,
-        entrenador:entrenador(id_entrenador, id_usuario, especialidad, experiencia, usuario:usuario(nombre, apellido, email)),
-        deporte:deporte(id_deporte, nombre, descripcion, nivel)
-      `)
-      .eq('id_entrenador_deporte', id)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return null;
-      }
-      throw new Error(`Error al obtener entrenador-deporte: ${error.message}`);
-    }
-
-    return data;
-  }
-
   async findByEntrenadorId(entrenadorId: number): Promise<EntrenadorDeporte[]> {
-    const { data, error } = await this.supabase
-      .from('entrenador_deporte')
+    const { data, error } = await supabaseClient
+      .from(this.tableName)
       .select(`
         *,
-        deporte:deporte(id_deporte, nombre, descripcion, nivel)
+        entrenador:id_entrenador(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
+        deporte:id_deporte(*)
       `)
       .eq('id_entrenador', entrenadorId);
 
     if (error) {
-      throw new Error(`Error al obtener deportes del entrenador: ${error.message}`);
+      throw new Error(`Error fetching entrenador deportes: ${error.message}`);
     }
 
     return data || [];
   }
 
   async findByDeporteId(deporteId: number): Promise<EntrenadorDeporte[]> {
-    const { data, error } = await this.supabase
-      .from('entrenador_deporte')
+    const { data, error } = await supabaseClient
+      .from(this.tableName)
       .select(`
         *,
-        entrenador:entrenador(id_entrenador, id_usuario, especialidad, experiencia, usuario:usuario(nombre, apellido, email))
+        entrenador:id_entrenador(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
+        deporte:id_deporte(*)
       `)
       .eq('id_deporte', deporteId);
 
     if (error) {
-      throw new Error(`Error al obtener entrenadores del deporte: ${error.message}`);
+      throw new Error(`Error fetching entrenador deportes: ${error.message}`);
     }
 
     return data || [];
   }
 
   async create(data: CreateEntrenadorDeporteData): Promise<EntrenadorDeporte> {
-    const { data: newEntrenadorDeporte, error } = await this.supabase
-      .from('entrenador_deporte')
-      .insert(data)
+    const { data: result, error } = await supabaseClient
+      .from(this.tableName)
+      .insert([data])
       .select(`
         *,
-        entrenador:entrenador(id_entrenador, id_usuario, especialidad, experiencia, usuario:usuario(nombre, apellido, email)),
-        deporte:deporte(id_deporte, nombre, descripcion, nivel)
+        entrenador:id_entrenador(
+          *,
+          usuario:id_usuario(nombre, apellido)
+        ),
+        deporte:id_deporte(*)
       `)
       .single();
 
     if (error) {
-      throw new Error(`Error al crear entrenador-deporte: ${error.message}`);
+      throw new Error(`Error creating entrenador deporte: ${error.message}`);
     }
 
-    return newEntrenadorDeporte;
+    return result;
   }
 
-  async update(id: number, data: UpdateEntrenadorDeporteData): Promise<EntrenadorDeporte> {
-    const { data: updatedEntrenadorDeporte, error } = await this.supabase
-      .from('entrenador_deporte')
-      .update(data)
-      .eq('id_entrenador_deporte', id)
-      .select(`
-        *,
-        entrenador:entrenador(id_entrenador, id_usuario, especialidad, experiencia, usuario:usuario(nombre, apellido, email)),
-        deporte:deporte(id_deporte, nombre, descripcion, nivel)
-      `)
-      .single();
-
-    if (error) {
-      throw new Error(`Error al actualizar entrenador-deporte: ${error.message}`);
-    }
-
-    return updatedEntrenadorDeporte;
-  }
-
-  async delete(id: number): Promise<void> {
-    const { error } = await this.supabase
-      .from('entrenador_deporte')
+  async delete(entrenadorId: number, deporteId: number): Promise<boolean> {
+    const { error } = await supabaseClient
+      .from(this.tableName)
       .delete()
-      .eq('id_entrenador_deporte', id);
+      .eq('id_entrenador', entrenadorId)
+      .eq('id_deporte', deporteId);
 
     if (error) {
-      throw new Error(`Error al eliminar entrenador-deporte: ${error.message}`);
+      throw new Error(`Error deleting entrenador deporte: ${error.message}`);
     }
+
+    return true;
   }
 }
